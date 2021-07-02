@@ -71,9 +71,9 @@ swrm.props['stick'] = np.full(100, False) # creates a length 100 array of False
 
 for ii in range(50):
     swrm.move(0.025, ib_collisions='sticky')
-    if np.any(swrm.ib_collision):
-        swrm.plot()
+
     swrm.props['stick'] = np.logical_or(swrm.props['stick'], swrm.ib_collision)
+    print(swrm.props['stick'].sum())
 
 swrm.plot_all(movie_filename='channel_flow_sticky.mp4', fps=3, fluid='vort')
 

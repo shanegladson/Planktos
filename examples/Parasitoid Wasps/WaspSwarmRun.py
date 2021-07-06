@@ -20,18 +20,19 @@ radius = 0.02  # (m)
 detectionDistance = 3.35 * (
         2 * radius) + radius  # Distance at which wasps can detect the target (add the radius since this is the center of the circle)
 burstSpeed = 0.34  # Maximum flight speed of the wasps (m/s)
-enduranceTime = 0.60  # Time (s) of endurance for burst speed
+enduranceTime = 0.6  # Time (s) of endurance for burst speed
 cruiseSpeedFactor = 0.7  # Multiplier of burst speed at which the wasps normally fly
 exhaustedSpeedFactor = 0.1  # Multiplier of burst speed when wasps are exhausted from locked-in state
 referenceVector = (1, 0)  # Reference vector when calculating angle relative to agent, must be in direction of flow
 adjustingForAngle = False  # Set to True if you want the agents to compensate for fluid flow
-includeJitter = False  # Set to True if you want to include Brownian motion in the simulation
-directionalNoise = False  # Set to True if you want to include imperfect directional locking onto the target
+includeJitter = True  # Set to True if you want to include Brownian motion in the simulation
+directionalNoise = True  # Set to True if you want to include imperfect directional locking onto the target
 directionalStdDev = np.pi / 6  # Standard deviation in the normal distribution when using directionalNoise
-updateDirectionRate = 10  # The number of time steps between changes in direction for a wasp
+updateDirectionRate = 2  # The number of time steps between changes in direction for a wasp
+fluidRecognitionLag = updateDirectionRate  # The delay in time steps for the wasp to recognize the fluid drift (this means compensation for fluid flow is delayed by a few steps)
 
 # Starting swarm  size, dt, and run time
-swarm_size = 250
+swarm_size = 100
 dt = 0.005
 runsteps = 100
 runtime = runsteps * dt
@@ -72,8 +73,10 @@ class WaspSwarm(planktos.swarm):
             lockedin += (np.linalg.norm(vectors, axis=1) < detectionDistance)
 
             # Subtract the fluid drift vector if adjusting for fluid flow, otherwise leave the vector as is
+            # TODO: Fix the adjustingForAngle to correctly adjust when agents are upwind of the target (leave False for now)
             if adjustingForAngle:
-                vectors -= fluiddrift
+                pastFluidDrift = self.get_fluid_drift(time=(self.envir.time - fluidRecognitionLag * dt))
+                vectors -= pastFluidDrift
 
             # Normalize the vectors
             denom = np.tile(np.linalg.norm(vectors, axis=1),
@@ -154,6 +157,7 @@ initRegion = circle + circleCenter
 
 # Initialize the swarm and add desired attributes
 swrm = WaspSwarm(envir=envir, swarm_size=swarm_size, init=initRegion)
+
 swrm.props['stick'] = np.full(swarm_size, False)  # Determines whether the wasps have reached the trap
 swrm.props['timeoflock'] = np.full(swarm_size,
                                    runtime)  # Stores time of lock onto the target, used when calculating exhaustion

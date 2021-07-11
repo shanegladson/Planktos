@@ -9,6 +9,7 @@ implementation.
 Created on Tues Jan 24 2017
 
 Author: Christopher Strickland
+
 Email: cstric12@utk.edu
 '''
 
@@ -54,7 +55,7 @@ def flatten_ode(swarm):
 # TODO: diffusion in porous media https://en.wikipedia.org/wiki/Diffusion#Diffusion_in_porous_media
 
 def RK45(fun, t0, y0, tf, rtol=0.0001, atol=1e-06, h_start=None):
-    '''Runge-Kutta Dormand-Prince solver (variable time-step solver). 
+    '''Runge-Kutta Dormand-Prince [1]_ solver (variable time-step solver). 
     
     The passed in ode function (fun) must have call signature (t,x) where x is 
     a 2-D array with a number of columns equal to the spatial dimension.
@@ -84,6 +85,11 @@ def RK45(fun, t0, y0, tf, rtol=0.0001, atol=1e-06, h_start=None):
     -------
         y : ndarray with shape matching y0
             new state at time tf
+
+    References
+    ----------
+    .. [1] Dormand, J.R., Prince, P.J. (1980). A family of embeded Runge-Kutta 
+       formulae, *Journal of Computational and Applied Mathematics*, 6(1), 19-26.
     '''
 
     A = np.array([0, 1/5, 3/10, 4/5, 8/9, 1, 1])
@@ -153,7 +159,7 @@ def RK45(fun, t0, y0, tf, rtol=0.0001, atol=1e-06, h_start=None):
 def Euler_brownian_motion(swarm, dt, mu=None, ode=None, sigma=None):
     '''Uses the Euler-Maruyama method to solve the Ito SDE
     
-        :math:`dX_t = \mu dt + \sigma dW_t`
+        :math:`dX_t = \mu(X_t,t) dt + \sigma(t) dW_t`
 
     where :math:`\mu` is the drift and :math:`\sigma` is the diffusion.
     :math:`\mu` can be specified directly as a constant or via an ode, or both.
@@ -194,28 +200,29 @@ def Euler_brownian_motion(swarm, dt, mu=None, ode=None, sigma=None):
         Brownian diffusion coefficient matrix. If None, use the 'cov' property 
         of the swarm object, or lacking that, the 'D' property. For convienence, 
         :math:`\sigma` can be provided in several ways:
+
         - As a covariance matrix stored in swarm.get_prop('cov'). This is the 
-            default. The matrix given by this swarm property is assumed
-            to be defined by :math:`\sigma\sigma^T` and independent of time or
-            spatial location. The result of using this matrix is that the 
-            integrated Wiener process over an interval dt has covariance 
-            swarm.get_prop('cov')*dt, and this will be fed directly into the 
-            random number generator to produce motion with these characteristics.
-            It should be a square matrix with the length of each side equal to 
-            the spatial dimension, and be symmetric.
+          default. The matrix given by this swarm property is assumed
+          to be defined by :math:`\sigma\sigma^T` and independent of time or
+          spatial location. The result of using this matrix is that the 
+          integrated Wiener process over an interval dt has covariance 
+          swarm.get_prop('cov')*dt, and this will be fed directly into the 
+          random number generator to produce motion with these characteristics.
+          It should be a square matrix with the length of each side equal to 
+          the spatial dimension, and be symmetric.
         - As a diffusion tensor (matrix). The diffusion tensor is given by
-            :math:`D = 0.5*\sigma\sigma^T`, so it is really just half the
-            covariance matrix. This is the diffusion tensor as given in the
-            Fokker-Planck equation or the heat equation. As in the case of the
-            covariance matrix, it is assumed constant in time and space, and
-            should be specified as a swarm property with the name 'D'. Again,
-            it will be fed directly into the random number generator. 
-            It should be a square matrix with the length of each side equal to 
-            the spatial dimension, and be symmetric.
+          :math:`D = 0.5*\sigma\sigma^T`, so it is really just half the
+          covariance matrix. This is the diffusion tensor as given in the
+          Fokker-Planck equation or the heat equation. As in the case of the
+          covariance matrix, it is assumed constant in time and space, and
+          should be specified as a swarm property with the name 'D'. Again,
+          it will be fed directly into the random number generator. 
+          It should be a square matrix with the length of each side equal to 
+          the spatial dimension, and be symmetric.
         - Given directly as an argument to this function. In this case, it should
-            be an DxD array, or an NxDxD array where N is the number of
-            agents and D the spatial dimension. Since this is an Euler step 
-            solver, sigma is assumed constant across dt.
+          be an DxD array, or an NxDxD array where N is the number of
+          agents and D the spatial dimension. Since this is an Euler step 
+          solver, sigma is assumed constant across dt.
 
     Returns
     -------
@@ -339,8 +346,8 @@ def Euler_brownian_motion(swarm, dt, mu=None, ode=None, sigma=None):
 
 def inertial_particles(swarm):
     '''Function generator for ODEs governing small, rigid, spherical particles 
-    whose dynamics can be described by the linearized Maxey-Riley equation [1]_
-    described in Haller and Sapsis (2008) [2]_. Critically, it is assumed that 
+    whose dynamics can be described by the linearized Maxey-Riley equation [2]_
+    described in Haller and Sapsis (2008) [3]_. Critically, it is assumed that 
     mu = R/St, where R is the density ratio 2*rho_f/(rho_f+2*rho_p) and St is 
     the Stokes number, is much greater than 1.
 
@@ -356,23 +363,25 @@ def inertial_particles(swarm):
     -----
     Requires that the following are specified in either swarm.shared_props
     (if uniform across agents) or swarm.props (for individual variation):
-        - rho or R: particle density or density ratio, respectively.
-            if supplying R, 0<R<2/3 corresponds to aerosols, R=2/3 is
-            neutrally buoyant, and 2/3<R<2 corresponds to bubbles.
-        - diam: diameter of particle
+
+    - rho or R: particle density or density ratio, respectively.
+      if supplying R, 0<R<2/3 corresponds to aerosols, R=2/3 is
+      neutrally buoyant, and 2/3<R<2 corresponds to bubbles.
+    - diam: diameter of particle
 
     Requires that the following are specified in the fluid environment:
-        - char_L: characteristic length scale for Reynolds number calculation
-        - nu: kinematic viscosity
-        - U: characteristic fluid speed
-        - g: acceleration due to gravity (set by default to 9.80665)
-        - rho: fluid density (unless R is specified in swarm)
+
+    - char_L: characteristic length scale for Reynolds number calculation
+    - nu: kinematic viscosity
+    - U: characteristic fluid speed
+    - g: acceleration due to gravity (set by default to 9.80665)
+    - rho: fluid density (unless R is specified in swarm)
 
     References
     ----------
-    ..[1] Maxey, M.R. and Riley, J.J. (1983). Equation of motion for a small rigid
+    .. [2] Maxey, M.R. and Riley, J.J. (1983). Equation of motion for a small rigid
       sphere in a nonuniform flow. Phys. Fluids, 26(4), 883-889.
-    ..[2] Haller, G. and Sapsis, T. (2008). Where do inertial particles go in
+    .. [3] Haller, G. and Sapsis, T. (2008). Where do inertial particles go in
       fluid flows? Physica D: Nonlinear Phenomena, 237(5), 573-583.
     '''
     
@@ -404,10 +413,10 @@ def inertial_particles(swarm):
         are the particle positions and the second N entries are the particle
         velocities and D is the dimension, return a 2NxD array representing the
         derivatives of position and velocity as given by the linearized
-        Maxey-Riley equation [1]_ described in Haller and Sapsis (2008) [2]_.
+        Maxey-Riley equation described in Haller and Sapsis (2008).
         
         This x will need to be flattened into a 2*N*D 1D array for use
-            in a scipy solver. A decorator is provided for this purpose.
+        in a scipy solver. A decorator is provided for this purpose.
         
         Parameters
         ----------
@@ -419,13 +428,6 @@ def inertial_particles(swarm):
         Returns
         ------- 
         a 2NxD array that gives dxdt=v then dvdt
-
-        References
-        ----------
-        ..[1] Maxey, M.R. and Riley, J.J. (1983). Equation of motion for a small rigid
-        sphere in a nonuniform flow. Phys. Fluids, 26(4), 883-889.
-        ..[2] Haller, G. and Sapsis, T. (2008). Where do inertial particles go in
-        fluid flows? Physica D: Nonlinear Phenomena, 237(5), 573-583.
         '''
 
         N = round(x.shape[0]/2)
@@ -461,12 +463,14 @@ def highRe_massive_drift(swarm):
     -----
     Requires that the following are specified in either swarm.shared_props
     (if uniform across agents) or swarm.props (for individual variation):
-        - m: mass of each agent
-        - Cd: Drag coefficient
-        - cross_sec: cross-sectional area of each agent
+
+    - m: mass of each agent
+    - Cd: Drag coefficient
+    - cross_sec: cross-sectional area of each agent
 
     Requires that the following are specified in the fluid environment:
-        - rho: fluid density
+
+    - rho: fluid density
     '''
 
     ##### Get required physical parameters #####
@@ -530,8 +534,8 @@ def tracer_particles(swarm, incl_dvdt=True):
     def ODEs(t,x):
         '''Return ODEs for tracer particles
         
-        This x will need to be flattened into a N*D 1D array for use
-            in a scipy solver. A decorator is provided for this purpose.
+        This x will need to be flattened into a N*D 1D array for use in a scipy 
+        solver. A decorator is provided for this purpose.
         
         Parameters
         ----------

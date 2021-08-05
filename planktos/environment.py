@@ -3086,5 +3086,23 @@ class environment:
         axbbox = ax.get_position().get_points()
         cbaxes = fig.add_axes([axbbox[1,0]+0.01, axbbox[0,1], 0.02, axbbox[1,1]-axbbox[0,1]])
         plt.colorbar(pcm, cax=cbaxes)
+
+        # Cylinder Geometry Data (ALWAYS UPDATE WITH IB2D RUN DATA)
+        xCenter = 0.25  # (m)
+        yCenter = 0.1  # (m)
+        radius = 0.02  # (m)
+
+        # Swarm parameters
+        detectionDistance = 3.35 * (
+                2 * radius) + radius  # Distance at which wasps can detect the target (add the radius since this is the center of the circle)
+        # Now to plot the detection radius
+        angles = np.arange(0, 2 * np.pi, step=0.005)
+        x = np.cos(angles) * detectionDistance
+        y = np.sin(angles) * detectionDistance
+        x += xCenter
+        y += yCenter
+
+        ax.plot(x, y, color='black')
+
         plt.show()
 

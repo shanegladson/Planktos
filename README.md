@@ -1,5 +1,5 @@
 # Parasitoid Wasp Model (Shane Gladson)
-The Parasitoid-Wasp branch of Planktos was made by Shane Gladson (shanegladson@ufl.edu) for the 2021 University of Arizona RTG REU. This was an attempt to use agent-based models to understand parasitoid wasp flight dynamics. A final paper describing the model in more depth can be found here: 
+The Parasitoid-Wasp branch of Planktos was made by Shane Gladson (shanegladson@ufl.edu) for the 2021 University of Arizona RTG REU. This was an attempt to use agent-based models to understand parasitoid wasp flight dynamics. A final paper describing the model in more depth can be found here: https://github.com/shanegladson/Planktos/blob/Parasitoid-Wasps/Arizona_REU_Report___Shane.pdf
 
 ## Different Scenarios of Parasitoid Wasps
 It includes a folter titled "Parasitoid Wasps" that can be found within the "Examples" folder of Planktos. There are four subfolders, each incorporating the flight model to calculate different aspects of wasp flight patterns.

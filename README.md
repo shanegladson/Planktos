@@ -1,3 +1,40 @@
+# Parasitoid Wasp Model (Shane Gladson)
+The Parasitoid-Wasp branch of Planktos was made by Shane Gladson (shanegladson@ufl.edu) for the 2021 University of Arizona RTG REU. This was an attempt to use agent-based models to understand parasitoid wasp flight dynamics. A final paper describing the model in more depth can be found here: 
+
+## Different Scenarios of Parasitoid Wasps
+It includes a folter titled "Parasitoid Wasps" that can be found within the "Examples" folder of Planktos. There are four subfolders, each incorporating the flight model to calculate different aspects of wasp flight patterns.
+
+### Single Cylinder
+This is the most basic model for analyzing wasp flight. In this case, there is a single cylinder in the domain and wasps are initialized either in a defined region downwind of the trap or randomly. This information is given in the "ib2d_data" folder. The link to IB2d with the files used to generate this data is found at https://github.com/shanegladson/IB2d/tree/Add-Examples.
+
+Next the flight model, which includes stochasticity and the ability to correct for wind advection, calculates the wasp movement and runs the simulation for the desired number of timesteps. Afterwards data is collected on the number of wasps which successfully reached the trap, mean arrival time, and arrival location. This information was manually logged into an Excel sheet, where it was later analyzed. The folder "Simulation Data" contains the iPython notebook for this data analysis.
+
+### Tiled Cylinder
+In this case, a square domain containing one cylindrical trap in the center was tiled to form a 3x3 grid. This is very similar to the Single Cylinder case, however the wasps are directed to fly towards the closest trap recognized. Similar variables were tracked in this case, however FTLE analysis was also performed.
+
+### Staggered Cylinder
+Wasps behaved similarly in the "Staggered Cylinder" folder as they did in the "Tiled Cylinder" folder, however the IB2d data given was of a single trial with 8 traps arranged in a 3-2-3-2 horizontally symmetrical grid. The trap locations had to be manually defined and data collection was identical to the data gathered for the "Tiled Cylinder" folder.
+
+### Calculate FTLE
+Planktos has a convenient feature that allows us to calculate Finite Time Lyapunov Exponent (FTLE) plots for our simulations. It is often used for particle image velocimetry, however it is possible to use in combination with complex movement models such as this one to understand emergent behavior in flight patterns. More information on FTLE can be found at https://shaddenlab.berkeley.edu/uploads/LCS-tutorial/FTLE-interp.html.
+
+The "Calculate FTLE" folder uses the IB2d data used in the "Single Cylinder" case to examine FTLE plots that arise from wasp flight patterns. In order to gather any meaninful results, stochastic processes had to be disabled. This was done simply by changing the respective variables to `False` in the code. When calculating FTLE for the trials with multiple cylinders, the code in those respective files was adjusted.
+
+## Important Variables
+All parameters were used with SI units. The variables listed below were modified during the experiments when examining the outcomes of different values. This does not include variables already found in Planktos.
+
+- `detectionDistance` The distance from which a wasp may be able to detect the trap
+- `burstSpeed` Maximum flight speed of the wasps (m/s)
+- `enduranceTime` Time at which a wasp may be able to fly at `burstSpeed` (s)
+- `cruiseSpeedFactor` Multiplier of `burstSpeed` at which wasps normally fly
+- `exhaustedSpeedFactor` Multiplier of burst speed when wasps are exhausted from locked-in state
+- `adjustingForAngle` Set to True if you want the agents to compensate for fluid flow
+- `includeJitter` Set to True if you want to include Brownian motion in the simulation
+- `directionalNoise` Set to True if you want to include imperfect directional locking onto the target
+- `directionalStdDev` Standard deviation in the normal distribution when using directionalNoise
+- `updateDirectionRate` The number of time steps between changes in direction for a wasp
+- `fluidRecognitionLag` The delay in time steps for the wasp to recognize the fluid drift (this means compensation for fluid flow is delayed by a few steps)
+
 # Planktos Agent-based Modeling Framework
 
 This project focuses on building a framework for ABMs of plankton and tiny
